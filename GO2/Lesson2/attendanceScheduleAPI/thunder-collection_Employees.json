@@ -1,0 +1,116 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "Employees",
+    "dateExported": "2024-03-27T18:13:08.607Z",
+    "version": "1.1",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "0b4e2678-39b7-4699-996b-f822174d2f69",
+            "colId": "26174b77-7c63-42a6-b0f6-22d3c328cced",
+            "containerId": "",
+            "name": "Get Employee By ID",
+            "url": "127.0.0.1:8080/employees/1",
+            "method": "GET",
+            "sortNum": 10000,
+            "created": "2024-03-27T14:12:22.692Z",
+            "modified": "2024-03-27T14:14:31.467Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "f4224f02-52df-4f8e-947c-46018b88378a",
+            "colId": "26174b77-7c63-42a6-b0f6-22d3c328cced",
+            "containerId": "",
+            "name": "Get All Employees",
+            "url": "127.0.0.1:8080/employees",
+            "method": "GET",
+            "sortNum": 20000,
+            "created": "2024-03-27T14:12:30.826Z",
+            "modified": "2024-03-27T14:12:30.826Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "3865d4c5-6b8d-40bc-92c5-228641c6bf24",
+            "colId": "26174b77-7c63-42a6-b0f6-22d3c328cced",
+            "containerId": "",
+            "name": "New Employee",
+            "url": "127.0.0.1:8080/employees",
+            "method": "POST",
+            "sortNum": 30000,
+            "created": "2024-03-27T14:14:54.934Z",
+            "modified": "2024-03-27T14:16:46.709Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"name\": \"Test\",\n  \"department\": \"Main\",\n  \"position\": \"CEO\"\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "208eecfb-fc84-4344-a394-35c442955941",
+            "colId": "26174b77-7c63-42a6-b0f6-22d3c328cced",
+            "containerId": "",
+            "name": "Employee starts the job",
+            "url": "127.0.0.1:8080/employees/{id}/start",
+            "method": "POST",
+            "sortNum": 40000,
+            "created": "2024-03-27T14:55:15.634Z",
+            "modified": "2024-03-27T14:55:31.853Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "id",
+                    "value": "1",
+                    "isPath": true
+                }
+            ],
+            "tests": []
+        },
+        {
+            "_id": "ea3ada01-2abc-4d2d-abb5-88cf0df41384",
+            "colId": "26174b77-7c63-42a6-b0f6-22d3c328cced",
+            "containerId": "",
+            "name": "Employee ends the job",
+            "url": "127.0.0.1:8080/employees/{id}/end",
+            "method": "POST",
+            "sortNum": 50000,
+            "created": "2024-03-27T14:57:19.276Z",
+            "modified": "2024-03-27T14:57:27.045Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "id",
+                    "value": "1",
+                    "isPath": true
+                }
+            ],
+            "tests": []
+        },
+        {
+            "_id": "cb5a5cd2-9243-47f2-a44e-0150c94fafaa",
+            "colId": "26174b77-7c63-42a6-b0f6-22d3c328cced",
+            "containerId": "",
+            "name": "Employee job duration",
+            "url": "127.0.0.1:8080/employees/{id}/schedule",
+            "method": "GET",
+            "sortNum": 60000,
+            "created": "2024-03-27T16:11:56.674Z",
+            "modified": "2024-03-27T16:12:30.204Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "id",
+                    "value": "1",
+                    "isPath": true
+                }
+            ],
+            "tests": []
+        }
+    ]
+}
