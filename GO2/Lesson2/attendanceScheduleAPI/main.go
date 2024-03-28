@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Dezmond-sama/Specialist_Go_Courses/GO2/Lesson2/attendanceScheduleAPI/database"
 	"github.com/gorilla/mux"
 )
 
@@ -28,10 +29,7 @@ const (
 )
 
 var (
-	employees        []Employee
-	attendances      []Attendance
-	nextEmployeeId   = 1
-	nextAttendanceId = 1
+	db *database.Database
 )
 
 type ErrorMessage = struct {
@@ -42,29 +40,7 @@ type Duration = struct {
 	Hours float64 `json:"hours"`
 }
 
-type Employee = struct {
-	EmployeeId int    `json:"employee_id"`
-	Name       string `json:"name"`
-	Department string `json:"department"`
-	Position   string `json:"position"`
-}
-
-type Attendance = struct {
-	AttendanceId int       `json:"attendance_id"`
-	EmployeeId   int       `json:"employee_id"`
-	Time         time.Time `json:"time"`
-	IsIn         bool      `json:"is_in"` // true -> start, false -> end
-}
-
-func FindEmployeeById(id int) (Employee, bool) {
-	for _, p := range employees {
-		if p.EmployeeId == id {
-			return p, true
-		}
-	}
-	return Employee{}, false
-}
-func GetIdHandler(w http.ResponseWriter, r *http.Request) (int, bool) {
+func GetIdHandler(w http.ResponseWriter, r *http.Request) (int64, bool) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -74,24 +50,28 @@ func GetIdHandler(w http.ResponseWriter, r *http.Request) (int, bool) {
 		json.NewEncoder(w).Encode(msg)
 		return 0, false
 	}
-	return id, true
+	return int64(id), true
 }
-func FindEmployeeByIdHandler(w http.ResponseWriter, r *http.Request, id int) (Employee, bool) {
-	employee, found := FindEmployeeById(id)
+func FindEmployeeByIdHandler(w http.ResponseWriter, r *http.Request, id int64) (database.Employee, bool) {
+	employee, found := db.FindEmployeeById(id)
 	if !found {
 		log.Printf("Employee with id %d not found.", id)
 		msg := ErrorMessage{Message: fmt.Sprintf("Employee with id %d not found.", id)}
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(msg)
-		return Employee{}, false
+		return employee, false
 	}
 	return employee, true
 }
+
 func GetAllEmployeesHandler(w http.ResponseWriter, r *http.Request) {
+
+	log.Println(db)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(employees)
+	json.NewEncoder(w).Encode(db.GetAllEmployees())
 }
+
 func GetEmployeeByIdHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	id, found := GetIdHandler(w, r)
@@ -105,7 +85,9 @@ func GetEmployeeByIdHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(employee)
 }
-func GetEmployeeSchduleHandler(w http.ResponseWriter, r *http.Request) {
+
+func GetEmployeeScheduleHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	daysRaw := r.URL.Query()["days"]
 	fromDate := time.Date(0, 0, 0, 0, 0, 0, 0, time.Local)
 	if len(daysRaw) == 1 {
@@ -119,38 +101,31 @@ func GetEmployeeSchduleHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		fromDate = time.Now().AddDate(0, 0, -days)
 	}
-	w.Header().Set("Content-Type", "application/json")
 	id, found := GetIdHandler(w, r)
 	if !found {
 		return
 	}
-	if _, found = FindEmployeeByIdHandler(w, r, id); !found {
+	employee, found := FindEmployeeByIdHandler(w, r, id)
+	if !found {
 		return
 	}
-	duration := 0.0
-	started := false
-	for _, att := range attendances {
-		if att.EmployeeId != id {
-			continue
-		}
-		if att.Time.Before(fromDate) {
-			continue
-		}
-		if att.IsIn {
-			started = true
-		} else if started {
-			duration = duration + att.Time.Sub(fromDate).Seconds()
-			started = false
-		}
-		fromDate = att.Time
+	schedule, duration, err := db.EmployeeSchedule(id, fromDate, time.Now())
+	if err != nil {
+		log.Printf("Error while getting schedule data for employee with id = %d", id)
+		msg := ErrorMessage{Message: fmt.Sprint(err.Error())}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(msg)
+		return
 	}
-	if started {
-		duration = duration + time.Since(fromDate).Seconds()
-	}
-
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(Duration{Hours: duration / 60 / 60})
+	type Schedule = struct {
+		Schedule []database.WorkPeriod `json:"schedule"`
+		Duration float64               `json:"total_duration"`
+		Employee database.Employee     `json:"employee"`
+	}
+	json.NewEncoder(w).Encode(Schedule{Schedule: schedule, Duration: duration, Employee: employee})
 }
+
 func EmploeeWorkHandler(isIn bool) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -158,16 +133,25 @@ func EmploeeWorkHandler(isIn bool) func(http.ResponseWriter, *http.Request) {
 		if !found {
 			return
 		}
-		if _, found = FindEmployeeByIdHandler(w, r, id); !found {
+		if !db.EmployeeExists(id) {
 			return
 		}
-		attendance := Attendance{AttendanceId: nextAttendanceId, EmployeeId: id, Time: time.Now(), IsIn: isIn}
-		nextAttendanceId++
-		attendances = append(attendances, attendance)
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(attendance)
+		var err error
+		if isIn {
+			_, err = db.EmployeeEnter(id)
+		} else {
+			_, err = db.EmployeeExit(id)
+		}
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			msg := ErrorMessage{Message: err.Error()}
+			json.NewEncoder(w).Encode(msg)
+		} else {
+			w.WriteHeader(http.StatusNoContent)
+		}
 	}
 }
+
 func CreateEmployeeHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -177,22 +161,57 @@ func CreateEmployeeHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(msg)
 		return
 	}
-	var employee Employee
+	var employee database.Employee
 	json.Unmarshal(body, &employee)
-	employee.EmployeeId = nextEmployeeId
-	nextEmployeeId++
-	employees = append(employees, employee)
-
+	err = db.CreateEmployee(&employee)
+	if err != nil {
+		log.Println("DB Error: ", err)
+		msg := ErrorMessage{Message: err.Error()}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(msg)
+		return
+	}
 	json.NewEncoder(w).Encode(employee)
 }
+
+func HomeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	fmt.Fprintln(w, "<head>")
+	fmt.Fprintln(w, "<style>table,th,td{border: 1px solid black; border-collapse: collapse; padding: 5px}</style>")
+	fmt.Fprintln(w, "</head>")
+	fmt.Fprintln(w, "<body>")
+
+	fmt.Fprintln(w, "<h1>API Employees</h1>")
+	fmt.Fprintln(w, "<h2>Routes:</h2>")
+	fmt.Fprintln(w, "<table>")
+	fmt.Fprintln(w, "<tr><th>Method</th><th>Path</th><th>Description</th></tr>")
+	fmt.Fprintln(w, "<tr><td>GET</td><td>/</td><td>Info</td></tr>")
+	fmt.Fprintln(w, "<tr><td>GET</td><td>/employees</td><td>Employees list</td></tr>")
+	fmt.Fprintln(w, "<tr><td>GET</td><td>/employees/{id}</td><td>Get employee by ID</td></tr>")
+	fmt.Fprintln(w, "<tr><td>POST</td><td>/employees</td><td>Create new employee</td></tr>")
+	fmt.Fprintln(w, "<tr><td>POST</td><td>/employees/{id}/start</td><td>Employee with ID starts working</td></tr>")
+	fmt.Fprintln(w, "<tr><td>POST</td><td>/employees/{id}/end</td><td>Employee with ID finishes working</td></tr>")
+	fmt.Fprintln(w, "<tr><td>GET</td><td>/employees/{id}/schedule?days=x</td><td>Get employee attendance for last x days. Total without x.</td></tr>")
+	fmt.Fprintln(w, "</table>")
+	fmt.Fprintln(w, "</body>")
+}
+
 func main() {
+	var err error
+	db, err = database.New()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer db.Disconnect()
 	router := mux.NewRouter()
+	router.HandleFunc("/", HomeHandler).Methods(http.MethodGet)
 	router.HandleFunc("/employees", GetAllEmployeesHandler).Methods(http.MethodGet)
 	router.HandleFunc("/employees/{id}", GetEmployeeByIdHandler).Methods(http.MethodGet)
 	router.HandleFunc("/employees", CreateEmployeeHandler).Methods(http.MethodPost)
 	router.HandleFunc("/employees/{id}/start", EmploeeWorkHandler(true)).Methods(http.MethodPost)
 	router.HandleFunc("/employees/{id}/end", EmploeeWorkHandler(false)).Methods(http.MethodPost)
-	router.HandleFunc("/employees/{id}/schedule", GetEmployeeSchduleHandler).Methods(http.MethodGet)
+	router.HandleFunc("/employees/{id}/schedule", GetEmployeeScheduleHandler).Methods(http.MethodGet)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 
 }
