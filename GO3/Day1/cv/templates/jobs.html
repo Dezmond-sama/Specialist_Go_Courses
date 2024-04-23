@@ -1,0 +1,10 @@
+{{ define "jobs" }} {{ range .Jobs }}
+<div class="job">
+    <div class="job__header">
+        <h2>{{ .Title }}</h2>
+        <h3>{{ .From }} - {{ .To }}</h3>
+    </div>
+    <p class="job__description">{{ .Description }}</p>
+</div>
+
+{{ end }} {{ end }}

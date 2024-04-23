@@ -1,0 +1,136 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+:root {
+    --primary-color: #fffbe9;
+    --secondary-color: #4d4626;
+    --primary-text-color: #333333;
+    --secondary-text-color: #fff;
+}
+html,
+body {
+    height: 100%;
+}
+a {
+    text-decoration: none;
+}
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+header,
+footer {
+    background-color: var(--secondary-color);
+}
+.top-navigation {
+    display: flex;
+}
+.top-navigation a {
+    background-color: var(--secondary-color);
+    color: var(--secondary-text-color);
+    padding: 10px 20px;
+    transition: all 0.2s;
+}
+.top-navigation .active-page {
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+}
+.top-navigation a:hover {
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+}
+main {
+    flex: 1;
+    padding: 10px;
+    background-color: var(--primary-color);
+}
+.content {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+footer .content {
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    color: var(--secondary-text-color);
+}
+footer a {
+    color: var(--secondary-text-color);
+    text-decoration: underline;
+}
+.card {
+    background-color: #f7dabf;
+    border: 4px solid #f3b67d;
+    padding: 24px;
+    display: flex;
+}
+
+.card__header {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    color: var(--primary-text-color);
+}
+.card__header h1 {
+    font-size: 56px;
+}
+.card__header h2 {
+    font-size: 32px;
+}
+.card__contacts {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 30px;
+    justify-content: space-between;
+    position: relative;
+}
+.card__contacts::before {
+    content: "";
+    position: absolute;
+    height: 120%;
+    top: -10%;
+    left: 0;
+    width: 5px;
+    background-color: #f3b67d;
+    border-radius: 50%;
+}
+.card__contacts a {
+    font-size: 18px;
+    color: var(--primary-text-color);
+    font-weight: bold;
+}
+.skills {
+    display: flex;
+    padding: 10px;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.skills__item {
+    padding: 10px 20px;
+    border: 2px solid #f3b67d;
+    background-color: #f7dabf;
+    border-radius: 25px;
+}
+.job__header h2 {
+    font-size: 32px;
+}
+
+.job__header h3 {
+    font-size: 18px;
+}
+
+.job__header {
+    padding-bottom: 8px;
+}
+.job__description {
+    font-size: 16px;
+}
+.job {
+    margin-bottom: 16px;
+}

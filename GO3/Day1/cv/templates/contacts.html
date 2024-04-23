@@ -1,0 +1,17 @@
+{{ define "body" }}
+<main>
+    <div class="content body-content">
+        <div class="card">
+            <div class="card__header">
+                <h1>{{ .About.Name }}</h1>
+                <h2>{{ .About.Position }}</h2>
+            </div>
+            <div class="card__contacts">
+                <a href="tel:{{ .About.Phone }}">{{ .About.Phone }}</a>
+                <a href="mailto:{{ .About.Email }}">{{ .About.Email }}</a>
+                <a href="{{ .About.Telegram }}">Telegram</a>
+            </div>
+        </div>
+    </div>
+</main>
+{{ end }}

@@ -1,0 +1,25 @@
+{{ define "header" }}
+<header>
+    <div class="content">
+        <nav class="top-navigation">
+            {{if eq .Active "/"}}
+            <div class="active-page">Main</div>
+            {{ else }}
+            <a href="/">Main</a>
+            {{ end }} {{if eq .Active "/skills"}}
+            <div class="active-page">Skills</div>
+            {{ else }}
+            <a href="/skills">Skills</a>
+            {{ end }} {{if eq .Active "/jobs"}}
+            <div class="active-page">Previous jobs</div>
+            {{ else }}
+            <a href="/jobs">Previous jobs</a>
+            {{ end }} {{if eq .Active "/contacts"}}
+            <div class="active-page">Contacts</div>
+            {{ else }}
+            <a href="/contacts">Contacts</a>
+            {{ end }}
+        </nav>
+    </div>
+</header>
+{{ end }}
