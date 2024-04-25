@@ -1,4 +1,4 @@
-module github.com/Dezmond-sama/Specialist_Go_Courses/GO3/Day2/bankstore
+module github.com/Dezmond-sama/Specialist_Go_Courses/GO3/bankstore
 
 go 1.22.2
 
