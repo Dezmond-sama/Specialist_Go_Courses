@@ -11,10 +11,9 @@ WHERE id = $1 LIMIT 1;
 
 -- name: ListAccounts :many
 SELECT * FROM accounts
-WHERE owner = $1
 ORDER BY id
-LIMIT $2
-OFFSET $3;
+LIMIT $1
+OFFSET $2;
 
 -- name: UpdateAccountBalance :one
 UPDATE accounts
@@ -22,10 +21,11 @@ SET balance = $2
 WHERE id = $1
 RETURNING *;
 
--- name: UpdateAccountOwner :exec
+-- name: UpdateAccountOwner :one
 UPDATE accounts
 SET owner = $2
-WHERE id = $1;
+WHERE id = $1
+RETURNING *;
 
 -- name: DeleteAccount :exec
 DELETE FROM accounts
