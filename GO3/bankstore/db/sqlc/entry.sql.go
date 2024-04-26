@@ -7,8 +7,6 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createEntry = `-- name: CreateEntry :one
@@ -20,8 +18,8 @@ RETURNING id, account_id, amount, created
 `
 
 type CreateEntryParams struct {
-	AccountID int64          `json:"account_id"`
-	Amount    pgtype.Numeric `json:"amount"`
+	AccountID int64 `json:"account_id"`
+	Amount    int64 `json:"amount"`
 }
 
 func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) (Entries, error) {
@@ -147,8 +145,8 @@ RETURNING id, account_id, amount, created
 `
 
 type UpdateEntryParams struct {
-	ID     int64          `json:"id"`
-	Amount pgtype.Numeric `json:"amount"`
+	ID     int64 `json:"id"`
+	Amount int64 `json:"amount"`
 }
 
 func (q *Queries) UpdateEntry(ctx context.Context, arg UpdateEntryParams) (Entries, error) {

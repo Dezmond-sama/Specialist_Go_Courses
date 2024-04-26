@@ -57,7 +57,7 @@ func (ns NullCurrency) Value() (driver.Value, error) {
 type Accounts struct {
 	ID       int64            `json:"id"`
 	Owner    string           `json:"owner"`
-	Balance  pgtype.Numeric   `json:"balance"`
+	Balance  int64            `json:"balance"`
 	Currency Currency         `json:"currency"`
 	Created  pgtype.Timestamp `json:"created"`
 }
@@ -65,7 +65,7 @@ type Accounts struct {
 type Entries struct {
 	ID        int64            `json:"id"`
 	AccountID int64            `json:"account_id"`
-	Amount    pgtype.Numeric   `json:"amount"`
+	Amount    int64            `json:"amount"`
 	Created   pgtype.Timestamp `json:"created"`
 }
 
@@ -73,6 +73,6 @@ type Transfers struct {
 	ID            int64            `json:"id"`
 	FromAccountID int64            `json:"from_account_id"`
 	ToAccountID   int64            `json:"to_account_id"`
-	Amount        pgtype.Numeric   `json:"amount"`
+	Amount        int64            `json:"amount"`
 	Created       pgtype.Timestamp `json:"created"`
 }

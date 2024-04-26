@@ -9,23 +9,24 @@ import (
 
 	"github.com/Dezmond-sama/Specialist_Go_Courses/GO3/bankstore/utils"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
 )
 
 const dbSource = "postgresql://postgres:postgres@localhost:5433/bankstoredb?sslmode=disable"
 
-var ctx = context.Background()
-
+var testDB *pgxpool.Pool
 var testQueries *Queries
 
 func TestMain(m *testing.M) {
-	conn, err := pgx.Connect(ctx, dbSource)
+	var err error
+	testDB, err = pgxpool.New(context.Background(), dbSource)
 	if err != nil {
 		log.Fatal("can't connect to db", err)
 	}
-	defer conn.Close(ctx)
+	defer testDB.Close()
 
-	testQueries = New(conn)
+	testQueries = New(testDB)
 	os.Exit(m.Run())
 }
 
@@ -42,7 +43,7 @@ func TestCreateAccount(t *testing.T) {
 }
 func createRandomAccount(t *testing.T) Accounts {
 	arg := CreateRandomAccountParams()
-	account, err := testQueries.CreateAccount(ctx, arg)
+	account, err := testQueries.CreateAccount(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, account)
@@ -60,7 +61,7 @@ func createRandomAccount(t *testing.T) Accounts {
 func TestGetAccount(t *testing.T) {
 	account1 := createRandomAccount(t)
 
-	account2, err := testQueries.GetAccount(ctx, account1.ID)
+	account2, err := testQueries.GetAccount(context.Background(), account1.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, account2)
 
@@ -77,11 +78,11 @@ func TestUpdateAccountAmount(t *testing.T) {
 		ID:      account1.ID,
 		Balance: utils.RandomAmount(),
 	}
-	account2, err := testQueries.UpdateAccountBalance(ctx, arg)
+	account2, err := testQueries.UpdateAccountBalance(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, account2)
 	require.Equal(t, account1.ID, account2.ID)
-	require.Equal(t, utils.PgNumericToFloat(arg.Balance), utils.PgNumericToFloat(account2.Balance))
+	require.Equal(t, arg.Balance, account2.Balance)
 
 	require.WithinDuration(t, account1.Created.Time, account2.Created.Time, time.Second)
 }
@@ -92,7 +93,7 @@ func TestUpdateAccountOwner(t *testing.T) {
 		ID:    account1.ID,
 		Owner: utils.RandomOwner(),
 	}
-	account2, err := testQueries.UpdateAccountOwner(ctx, arg)
+	account2, err := testQueries.UpdateAccountOwner(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, account2)
 	require.Equal(t, account1.ID, account2.ID)
@@ -103,9 +104,9 @@ func TestUpdateAccountOwner(t *testing.T) {
 }
 func TestDeleteAccount(t *testing.T) {
 	account1 := createRandomAccount(t)
-	err := testQueries.DeleteAccount(ctx, account1.ID)
+	err := testQueries.DeleteAccount(context.Background(), account1.ID)
 	require.NoError(t, err)
-	account2, err := testQueries.GetAccount(ctx, account1.ID)
+	account2, err := testQueries.GetAccount(context.Background(), account1.ID)
 	require.Error(t, err)
 	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, account2)
@@ -119,7 +120,7 @@ func TestListAccounts(t *testing.T) {
 		Limit:  5,
 		Offset: 5,
 	}
-	accounts, err := testQueries.ListAccounts(ctx, arg)
+	accounts, err := testQueries.ListAccounts(context.Background(), arg)
 	require.NoError(t, err)
 	require.Len(t, accounts, 5)
 }

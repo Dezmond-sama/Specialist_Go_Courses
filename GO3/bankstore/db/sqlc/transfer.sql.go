@@ -7,8 +7,6 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createTransfer = `-- name: CreateTransfer :one
@@ -20,9 +18,9 @@ RETURNING id, from_account_id, to_account_id, amount, created
 `
 
 type CreateTransferParams struct {
-	FromAccountID int64          `json:"from_account_id"`
-	ToAccountID   int64          `json:"to_account_id"`
-	Amount        pgtype.Numeric `json:"amount"`
+	FromAccountID int64 `json:"from_account_id"`
+	ToAccountID   int64 `json:"to_account_id"`
+	Amount        int64 `json:"amount"`
 }
 
 func (q *Queries) CreateTransfer(ctx context.Context, arg CreateTransferParams) (Transfers, error) {
@@ -232,8 +230,8 @@ RETURNING id, from_account_id, to_account_id, amount, created
 `
 
 type UpdateTransferParams struct {
-	ID     int64          `json:"id"`
-	Amount pgtype.Numeric `json:"amount"`
+	ID     int64 `json:"id"`
+	Amount int64 `json:"amount"`
 }
 
 func (q *Queries) UpdateTransfer(ctx context.Context, arg UpdateTransferParams) (Transfers, error) {

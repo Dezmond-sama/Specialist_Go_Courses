@@ -7,9 +7,32 @@ package db
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const addAccountBalance = `-- name: AddAccountBalance :one
+UPDATE accounts
+SET balance = balance + $1
+WHERE id = $2
+RETURNING id, owner, balance, currency, created
+`
+
+type AddAccountBalanceParams struct {
+	Amount int64 `json:"amount"`
+	ID     int64 `json:"id"`
+}
+
+func (q *Queries) AddAccountBalance(ctx context.Context, arg AddAccountBalanceParams) (Accounts, error) {
+	row := q.db.QueryRow(ctx, addAccountBalance, arg.Amount, arg.ID)
+	var i Accounts
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.Balance,
+		&i.Currency,
+		&i.Created,
+	)
+	return i, err
+}
 
 const createAccount = `-- name: CreateAccount :one
 INSERT INTO
@@ -20,9 +43,9 @@ RETURNING id, owner, balance, currency, created
 `
 
 type CreateAccountParams struct {
-	Owner    string         `json:"owner"`
-	Balance  pgtype.Numeric `json:"balance"`
-	Currency Currency       `json:"currency"`
+	Owner    string   `json:"owner"`
+	Balance  int64    `json:"balance"`
+	Currency Currency `json:"currency"`
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Accounts, error) {
@@ -55,6 +78,25 @@ WHERE id = $1 LIMIT 1
 
 func (q *Queries) GetAccount(ctx context.Context, id int64) (Accounts, error) {
 	row := q.db.QueryRow(ctx, getAccount, id)
+	var i Accounts
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.Balance,
+		&i.Currency,
+		&i.Created,
+	)
+	return i, err
+}
+
+const getAccountForUpdate = `-- name: GetAccountForUpdate :one
+SELECT id, owner, balance, currency, created FROM accounts
+WHERE id = $1 LIMIT 1 FOR
+NO KEY UPDATE
+`
+
+func (q *Queries) GetAccountForUpdate(ctx context.Context, id int64) (Accounts, error) {
+	row := q.db.QueryRow(ctx, getAccountForUpdate, id)
 	var i Accounts
 	err := row.Scan(
 		&i.ID,
@@ -112,8 +154,8 @@ RETURNING id, owner, balance, currency, created
 `
 
 type UpdateAccountBalanceParams struct {
-	ID      int64          `json:"id"`
-	Balance pgtype.Numeric `json:"balance"`
+	ID      int64 `json:"id"`
+	Balance int64 `json:"balance"`
 }
 
 func (q *Queries) UpdateAccountBalance(ctx context.Context, arg UpdateAccountBalanceParams) (Accounts, error) {

@@ -3,8 +3,6 @@ package utils
 import (
 	"math/rand"
 	"strings"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -29,8 +27,8 @@ func RandomOwner() string {
 	return RandomString(6)
 }
 
-func RandomAmount() pgtype.Numeric {
-	return FloatToPgNumeric(float64(RandomInt(1000, 100000)) / 100)
+func RandomAmount() int64 {
+	return RandomInt(10, 1000)
 }
 
 func RandomCurrency() string {
